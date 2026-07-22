@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f97316" />
+  <meta name="application-name" content="Tiger" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Tiger" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="description" content="Tiger" />
+  <title>Tiger</title>
+  <link rel="manifest" href="./manifest.webmanifest?v=3.5.4" />
+  <link rel="shortcut icon" href="./favicon.ico?v=3.5.4" />
+  <link rel="icon" href="./favicon.ico?v=3.5.4" sizes="any" />
+  <link rel="icon" href="./favicon-16x16.png?v=3.5.4" type="image/png" sizes="16x16" />
+  <link rel="icon" href="./favicon-32x32.png?v=3.5.4" type="image/png" sizes="32x32" />
+  <link rel="icon" href="./tiger-icon-192-v26.png?v=3.5.4" type="image/png" sizes="192x192" />
+  <link rel="apple-touch-icon" href="./apple-touch-icon.png?v=3.5.4" />
+  <link rel="apple-touch-icon" sizes="180x180" href="./tiger-icon-180-v26.png?v=3.5.4" />
+  <link rel="stylesheet" href="./styles.css?v=3.5.4" />
+</head>
+<body>
+  <a class="skip-link" href="#app">Skip to app</a>
+  <div class="tiger-bg" aria-hidden="true">
+    <div class="tiger-figure"></div>
+  </div>
+  <header class="app-header" role="banner">
+    <div class="brand-block">
+      <div class="brand-mark" aria-hidden="true"></div>
+      <div><h1>Tiger</h1></div>
+    </div>
+    <div class="header-actions">
+      <div class="quick-cycle" aria-label="Quick training week switcher">
+        <button class="quick-cycle-btn" data-action="set-cycle" data-cycle="A" type="button">Week 1</button>
+        <button class="quick-cycle-btn" data-action="set-cycle" data-cycle="B" type="button">Week 2</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="layout-shell">
+    <nav class="side-nav" aria-label="Main navigation">
+      <button data-route="home" class="nav-link is-active"><span>Home</span></button>
+      <button data-route="plan" class="nav-link"><span>Plan</span></button>
+      <button data-route="workouts" class="nav-link"><span>Workouts</span></button>
+      <button data-route="log" class="nav-link"><span>Log</span></button>
+      <button data-route="progress" class="nav-link"><span>Progress</span></button>
+      <button data-route="insights" class="nav-link"><span>Insights</span></button>
+      <button data-route="cardio-goals" class="nav-link"><span>Running Plan</span></button>
+      <button data-route="settings" class="nav-link"><span>Settings</span></button>
+    </nav>
+
+    <main id="app" tabindex="-1" role="main" aria-live="polite"></main>
+  </div>
+
+  <nav class="bottom-nav" aria-label="Mobile navigation">
+    <button data-route="home" class="nav-link is-active">Home</button>
+    <button data-route="plan" class="nav-link">Plan</button>
+    <button data-route="workouts" class="nav-link">Workouts</button>
+    <button data-route="log" class="nav-link">Log</button>
+    <button data-route="more" class="nav-link">More</button>
+  </nav>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+
+  <script>
+    (() => {
+      const BUILD = '3.5.4';
+      const RESET_MARKER = `tiger_runtime_build:${new URL('./', location.href).pathname}`;
+
+      function loadApplication() {
+        const script = document.createElement('script');
+        script.src = `./app.js?v=${BUILD}`;
+        script.defer = true;
+        document.body.appendChild(script);
+      }
+
+      async function start() {
+        if (!("serviceWorker" in navigator) || location.protocol === "file:") {
+          loadApplication();
+          return;
+        }
+
+        try {
+          // One conservative reset per build. This removes only Tiger runtime caches
+          // and the service worker registered for this exact GitHub Pages folder.
+          if (localStorage.getItem(RESET_MARKER) !== BUILD) {
+            const appScope = new URL('./', location.href).href;
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            await Promise.all(
+              registrations
+                .filter(registration => registration.scope === appScope)
+                .map(registration => registration.unregister())
+            );
+
+            if ('caches' in window) {
+              const cacheNames = await caches.keys();
+              await Promise.all(
+                cacheNames
+                  .filter(name => name.startsWith('tiger-'))
+                  .map(name => caches.delete(name))
+              );
+            }
+
+            localStorage.setItem(RESET_MARKER, BUILD);
+
+            // An unregistered worker may continue controlling the current document
+            // until the next navigation, so reload before requesting app.js.
+            if (navigator.serviceWorker.controller) {
+              const freshUrl = new URL(location.href);
+              freshUrl.searchParams.set('_tiger_fresh', Date.now().toString());
+              location.replace(freshUrl.href);
+              return;
+            }
+          }
+
+          const hadController = Boolean(navigator.serviceWorker.controller);
+          let refreshing = false;
+          navigator.serviceWorker.addEventListener('controllerchange', () => {
+            if (!hadController || refreshing) return;
+            refreshing = true;
+            location.reload();
+          });
+
+          const registration = await navigator.serviceWorker.register('./sw.js?v=3.5.4', {
+            scope: './',
+            updateViaCache: 'none'
+          });
+          await registration.update();
+        } catch (_) {
+          // Tiger remains usable online if service-worker management is unavailable.
+        }
+
+        loadApplication();
+      }
+
+      start();
+    })();
+  </script>
+</body>
+</html>
