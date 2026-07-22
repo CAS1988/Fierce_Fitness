@@ -1,4 +1,4 @@
-const BUILD = '3.5.5';
+const BUILD = '3.5.6';
 const SCOPE_TOKEN = new URL(self.registration.scope).pathname
   .replace(/^\/+|\/+$/g, '')
   .replace(/[^a-z0-9_-]+/gi, '-') || 'root';
@@ -7,9 +7,9 @@ const CACHE_NAME = `tiger-${SCOPE_TOKEN}-v${BUILD}`;
 const CORE_FILES = [
   './',
   './index.html',
-  './styles.css',
-  './app.js',
-  './manifest.webmanifest',
+  `./styles.css?v=${BUILD}`,
+  `./app.js?v=${BUILD}`,
+  `./manifest.webmanifest?v=${BUILD}`,
   './version.txt',
   './favicon.ico',
   './favicon-16x16.png',
@@ -48,7 +48,7 @@ self.addEventListener('activate', event => {
   })());
 });
 
-async function cacheFirstExact(request) {
+async function cachedAsset(request) {
   const cache = await caches.open(CACHE_NAME);
   const cached = await cache.match(request);
   if (cached) return cached;
@@ -61,26 +61,30 @@ async function cacheFirstExact(request) {
   }
 }
 
-async function navigationFast(request) {
+async function instantNavigation(request, event) {
   const cache = await caches.open(CACHE_NAME);
   const cached = (await cache.match(request, { ignoreSearch: true })) ||
     (await cache.match(scopedUrl('./index.html'), { ignoreSearch: true }));
 
-  const network = fetch(new Request(request, { cache: 'no-cache' })).then(async response => {
-    if (!response || !response.ok) throw new Error('Navigation request failed');
-    await cache.put(scopedUrl('./index.html'), response.clone());
+  const refresh = fetch(new Request(request, { cache: 'no-cache' }))
+    .then(async response => {
+      if (response && response.ok) {
+        await cache.put(scopedUrl('./index.html'), response.clone());
+      }
+    })
+    .catch(() => {});
+
+  // Refresh GitHub's copy after the cached screen is returned. Never hold up launch.
+  if (event && typeof event.waitUntil === 'function') event.waitUntil(refresh);
+  if (cached) return cached;
+
+  try {
+    const response = await fetch(new Request(request, { cache: 'no-cache' }));
+    if (response && response.ok) await cache.put(scopedUrl('./index.html'), response.clone());
     return response;
-  });
-
-  if (!cached) return network.catch(() => Response.error());
-
-  // Prefer a fresh page when the network responds promptly, but never hold an
-  // installed launch for more than 700 ms. The network request continues and
-  // refreshes the cached page for the next opening.
-  return Promise.race([
-    network.catch(() => cached),
-    new Promise(resolve => setTimeout(() => resolve(cached), 700))
-  ]);
+  } catch (_) {
+    return Response.error();
+  }
 }
 
 self.addEventListener('fetch', event => {
@@ -89,11 +93,9 @@ self.addEventListener('fetch', event => {
   if (url.origin !== self.location.origin) return;
 
   if (event.request.mode === 'navigate') {
-    event.respondWith(navigationFast(event.request));
+    event.respondWith(instantNavigation(event.request, event));
     return;
   }
 
-  // Every release changes the ?v= value. Exact matching therefore gives instant
-  // repeat launches without ever confusing one build's JS/CSS with another.
-  event.respondWith(cacheFirstExact(event.request));
+  event.respondWith(cachedAsset(event.request));
 });

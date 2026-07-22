@@ -1,2 +1,2 @@
-Tiger v3.5.5
-Performance-optimised repository build
+Tiger v3.5.6
+Instant-launch repository build

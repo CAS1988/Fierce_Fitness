@@ -1,4 +1,4 @@
-TIGER v3.5.5 — FAST-START GITHUB PAGES UPDATE
+TIGER v3.5.6 — FAST-START GITHUB PAGES UPDATE
 
 UPLOAD TO YOUR EXISTING REPOSITORY
 1. Extract this ZIP on your computer.
@@ -20,10 +20,10 @@ VERIFY
 1. Wait for the Pages deployment to complete.
 2. Open:
      https://YOUR-USERNAME.github.io/YOUR-REPOSITORY-NAME/version.txt
-3. Confirm it says "Tiger v3.5.5".
+3. Confirm it says "Tiger v3.5.6".
 4. Fully close the installed Tiger app and reopen it. The first opening after the
    update may fetch the new files; following launches should be substantially faster.
-5. In Tiger, open Settings and confirm "Tiger v3.5.5" at the bottom.
+5. In Tiger, open Settings and confirm "Tiger v3.5.6" at the bottom.
 
 DATA
 This performance update retains the existing v3.5.2-format storage key. Workout
