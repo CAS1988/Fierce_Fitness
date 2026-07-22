@@ -1,3 +1,2 @@
-Tiger v3.5.4
-Fresh repository build
-Includes varied running, visceral-fat conditioning, advanced core progressions, manual skill upgrades, and the GitHub/PWA cache-reset fix.
+Tiger v3.5.5
+Performance-optimised repository build

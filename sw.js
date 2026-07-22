@@ -1,4 +1,4 @@
-const BUILD = '3.5.4';
+const BUILD = '3.5.5';
 const SCOPE_TOKEN = new URL(self.registration.scope).pathname
   .replace(/^\/+|\/+$/g, '')
   .replace(/[^a-z0-9_-]+/gi, '-') || 'root';
@@ -22,8 +22,7 @@ const CORE_FILES = [
   './tiger-icon-512-v26.png',
   './tiger-maskable-192-v26.png',
   './tiger-maskable-512-v26.png',
-  './assets/tiger-bg.png',
-  './assets/tiger-logo.png',
+  './assets/tiger-bg.webp',
   './assets/tiger-logo-mask.png'
 ];
 
@@ -31,15 +30,10 @@ function scopedUrl(path) {
   return new URL(path, self.registration.scope).href;
 }
 
-function freshRequest(request) {
-  return new Request(request, { cache: 'reload' });
-}
-
 self.addEventListener('install', event => {
   event.waitUntil((async () => {
     const cache = await caches.open(CACHE_NAME);
-    const requests = CORE_FILES.map(path => freshRequest(scopedUrl(path)));
-    await cache.addAll(requests);
+    await cache.addAll(CORE_FILES.map(path => new Request(scopedUrl(path), { cache: 'reload' })));
     await self.skipWaiting();
   })());
 });
@@ -47,58 +41,59 @@ self.addEventListener('install', event => {
 self.addEventListener('activate', event => {
   event.waitUntil((async () => {
     const keys = await caches.keys();
-    await Promise.all(
-      keys
-        .filter(key => key.startsWith('tiger-') && key !== CACHE_NAME)
-        .map(key => caches.delete(key))
-    );
+    await Promise.all(keys
+      .filter(key => key.startsWith('tiger-') && key !== CACHE_NAME)
+      .map(key => caches.delete(key)));
     await self.clients.claim();
   })());
 });
 
-async function networkFirst(request, fallbackPath) {
+async function cacheFirstExact(request) {
   const cache = await caches.open(CACHE_NAME);
-  try {
-    const response = await fetch(freshRequest(request));
-    if (!response || !response.ok) throw new Error('Network request failed');
-    await cache.put(request, response.clone());
-    return response;
-  } catch (_) {
-    return (await cache.match(request, { ignoreSearch: true })) ||
-      (fallbackPath ? await cache.match(scopedUrl(fallbackPath), { ignoreSearch: true }) : undefined) ||
-      Response.error();
-  }
-}
-
-async function cacheFirst(request) {
-  const cache = await caches.open(CACHE_NAME);
-  const cached = await cache.match(request, { ignoreSearch: true });
+  const cached = await cache.match(request);
   if (cached) return cached;
   try {
     const response = await fetch(request);
     if (response && response.ok) await cache.put(request, response.clone());
     return response;
   } catch (_) {
-    return Response.error();
+    return (await cache.match(request, { ignoreSearch: true })) || Response.error();
   }
+}
+
+async function navigationFast(request) {
+  const cache = await caches.open(CACHE_NAME);
+  const cached = (await cache.match(request, { ignoreSearch: true })) ||
+    (await cache.match(scopedUrl('./index.html'), { ignoreSearch: true }));
+
+  const network = fetch(new Request(request, { cache: 'no-cache' })).then(async response => {
+    if (!response || !response.ok) throw new Error('Navigation request failed');
+    await cache.put(scopedUrl('./index.html'), response.clone());
+    return response;
+  });
+
+  if (!cached) return network.catch(() => Response.error());
+
+  // Prefer a fresh page when the network responds promptly, but never hold an
+  // installed launch for more than 700 ms. The network request continues and
+  // refreshes the cached page for the next opening.
+  return Promise.race([
+    network.catch(() => cached),
+    new Promise(resolve => setTimeout(() => resolve(cached), 700))
+  ]);
 }
 
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
-
-  const requestUrl = new URL(event.request.url);
-  if (requestUrl.origin !== self.location.origin) return;
+  const url = new URL(event.request.url);
+  if (url.origin !== self.location.origin) return;
 
   if (event.request.mode === 'navigate') {
-    event.respondWith(networkFirst(event.request, './index.html'));
+    event.respondWith(navigationFast(event.request));
     return;
   }
 
-  const isVersioned = requestUrl.searchParams.has('v');
-  const isAppCode = ['script', 'style', 'manifest'].includes(event.request.destination) ||
-    /\.(?:js|css|webmanifest|json|txt)$/i.test(requestUrl.pathname);
-
-  event.respondWith((isVersioned || isAppCode)
-    ? networkFirst(event.request)
-    : cacheFirst(event.request));
+  // Every release changes the ?v= value. Exact matching therefore gives instant
+  // repeat launches without ever confusing one build's JS/CSS with another.
+  event.respondWith(cacheFirstExact(event.request));
 });

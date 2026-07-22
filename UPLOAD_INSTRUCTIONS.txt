@@ -1,47 +1,30 @@
-TIGER v3.5.4 — FRESH GITHUB REPOSITORY UPLOAD
+TIGER v3.5.5 — FAST-START GITHUB PAGES UPDATE
 
-IMPORTANT
-Create a brand-new repository with a NEW repository name, for example:
-  tiger-training-fresh
-
-Using a new name creates a new GitHub Pages URL and completely avoids the old
-phone application's service-worker scope. Reusing the deleted repository's exact
-name can reuse the same URL and allow the old installed app to remain involved.
-
-UPLOAD
+UPLOAD TO YOUR EXISTING REPOSITORY
 1. Extract this ZIP on your computer.
-2. Create a new GitHub repository. A public repository is simplest for Pages.
-3. Upload ALL extracted contents to the repository root.
-4. Do not upload the ZIP itself.
-5. Confirm the repository root directly shows:
-     index.html
-     app.js
-     styles.css
-     sw.js
-     manifest.webmanifest
-     version.txt
-     .github
+2. In the GitHub repository currently hosting Tiger, upload ALL extracted files.
+3. Replace files with the same names when GitHub asks.
+4. Do not upload the ZIP itself or place the extracted files inside another folder.
+5. Confirm the repository root directly shows index.html, app.js, styles.css,
+   sw.js, manifest.webmanifest and version.txt.
 6. Commit the upload to the main branch.
-7. Open repository Settings > Pages.
-8. Under Build and deployment, select GitHub Actions as the source.
-9. Open the Actions tab and wait for "Deploy Tiger to GitHub Pages" to show a green tick.
 
-VERIFY BEFORE INSTALLING
-1. Open:
-     https://YOUR-USERNAME.github.io/NEW-REPOSITORY-NAME/version.txt
-2. It must say "Tiger v3.5.4".
-3. Then open the normal Pages address:
-     https://YOUR-USERNAME.github.io/NEW-REPOSITORY-NAME/
-4. In Tiger, open Settings and confirm "Tiger v3.5.4" at the bottom.
+PAGES SETTING
+Use the same publishing method that is already working:
+  Settings > Pages
+  Source: Deploy from a branch
+  Branch: main
+  Folder: /(root)
 
-PHONE
-Remove the old Tiger home-screen shortcut before installing the new Pages URL.
-Then open the new URL in Chrome (Android) or Safari (iPhone) and add/install it
-to the home screen.
+VERIFY
+1. Wait for the Pages deployment to complete.
+2. Open:
+     https://YOUR-USERNAME.github.io/YOUR-REPOSITORY-NAME/version.txt
+3. Confirm it says "Tiger v3.5.5".
+4. Fully close the installed Tiger app and reopen it. The first opening after the
+   update may fetch the new files; following launches should be substantially faster.
+5. In Tiger, open Settings and confirm "Tiger v3.5.5" at the bottom.
 
 DATA
-The cache reset does not delete Tiger logs or settings. When the old and new
-repositories use the same GitHub username (the same username.github.io origin),
-Tiger should continue to find the existing v3.5.2-format local data. Exporting a
-backup first is still sensible if the old app remains accessible. Data will not
-carry automatically if the new site uses a different GitHub username or domain.
+This performance update retains the existing v3.5.2-format storage key. Workout
+history, settings and progression records remain on the same phone/browser origin.

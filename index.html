@@ -11,15 +11,15 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="description" content="Tiger" />
   <title>Tiger</title>
-  <link rel="manifest" href="./manifest.webmanifest?v=3.5.4" />
-  <link rel="shortcut icon" href="./favicon.ico?v=3.5.4" />
-  <link rel="icon" href="./favicon.ico?v=3.5.4" sizes="any" />
-  <link rel="icon" href="./favicon-16x16.png?v=3.5.4" type="image/png" sizes="16x16" />
-  <link rel="icon" href="./favicon-32x32.png?v=3.5.4" type="image/png" sizes="32x32" />
-  <link rel="icon" href="./tiger-icon-192-v26.png?v=3.5.4" type="image/png" sizes="192x192" />
-  <link rel="apple-touch-icon" href="./apple-touch-icon.png?v=3.5.4" />
-  <link rel="apple-touch-icon" sizes="180x180" href="./tiger-icon-180-v26.png?v=3.5.4" />
-  <link rel="stylesheet" href="./styles.css?v=3.5.4" />
+  <link rel="manifest" href="./manifest.webmanifest?v=3.5.5" />
+  <link rel="shortcut icon" href="./favicon.ico?v=3.5.5" />
+  <link rel="icon" href="./favicon.ico?v=3.5.5" sizes="any" />
+  <link rel="icon" href="./favicon-16x16.png?v=3.5.5" type="image/png" sizes="16x16" />
+  <link rel="icon" href="./favicon-32x32.png?v=3.5.5" type="image/png" sizes="32x32" />
+  <link rel="icon" href="./tiger-icon-192-v26.png?v=3.5.5" type="image/png" sizes="192x192" />
+  <link rel="apple-touch-icon" href="./apple-touch-icon.png?v=3.5.5" />
+  <link rel="apple-touch-icon" sizes="180x180" href="./tiger-icon-180-v26.png?v=3.5.5" />
+  <link rel="stylesheet" href="./styles.css?v=3.5.5" />
 </head>
 <body>
   <a class="skip-link" href="#app">Skip to app</a>
@@ -64,78 +64,23 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 
+  <script defer src="./app.js?v=3.5.5"></script>
   <script>
     (() => {
-      const BUILD = '3.5.4';
-      const RESET_MARKER = `tiger_runtime_build:${new URL('./', location.href).pathname}`;
+      const BUILD = '3.5.5';
 
-      function loadApplication() {
-        const script = document.createElement('script');
-        script.src = `./app.js?v=${BUILD}`;
-        script.defer = true;
-        document.body.appendChild(script);
-      }
+      // Application code loads immediately. PWA maintenance runs afterwards so
+      // a slow network or service-worker check can never hold up Tiger's first screen.
+      if (!("serviceWorker" in navigator) || location.protocol === "file:") return;
 
-      async function start() {
-        if (!("serviceWorker" in navigator) || location.protocol === "file:") {
-          loadApplication();
-          return;
-        }
-
-        try {
-          // One conservative reset per build. This removes only Tiger runtime caches
-          // and the service worker registered for this exact GitHub Pages folder.
-          if (localStorage.getItem(RESET_MARKER) !== BUILD) {
-            const appScope = new URL('./', location.href).href;
-            const registrations = await navigator.serviceWorker.getRegistrations();
-            await Promise.all(
-              registrations
-                .filter(registration => registration.scope === appScope)
-                .map(registration => registration.unregister())
-            );
-
-            if ('caches' in window) {
-              const cacheNames = await caches.keys();
-              await Promise.all(
-                cacheNames
-                  .filter(name => name.startsWith('tiger-'))
-                  .map(name => caches.delete(name))
-              );
-            }
-
-            localStorage.setItem(RESET_MARKER, BUILD);
-
-            // An unregistered worker may continue controlling the current document
-            // until the next navigation, so reload before requesting app.js.
-            if (navigator.serviceWorker.controller) {
-              const freshUrl = new URL(location.href);
-              freshUrl.searchParams.set('_tiger_fresh', Date.now().toString());
-              location.replace(freshUrl.href);
-              return;
-            }
-          }
-
-          const hadController = Boolean(navigator.serviceWorker.controller);
-          let refreshing = false;
-          navigator.serviceWorker.addEventListener('controllerchange', () => {
-            if (!hadController || refreshing) return;
-            refreshing = true;
-            location.reload();
-          });
-
-          const registration = await navigator.serviceWorker.register('./sw.js?v=3.5.4', {
-            scope: './',
-            updateViaCache: 'none'
-          });
-          await registration.update();
-        } catch (_) {
-          // Tiger remains usable online if service-worker management is unavailable.
-        }
-
-        loadApplication();
-      }
-
-      start();
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register(`./sw.js?v=${BUILD}`, {
+          scope: './',
+          updateViaCache: 'none'
+        }).then(registration => registration.update()).catch(() => {
+          // Tiger remains fully usable online if PWA maintenance is unavailable.
+        });
+      }, { once: true });
     })();
   </script>
 </body>
