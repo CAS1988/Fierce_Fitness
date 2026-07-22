@@ -1,6 +1,6 @@
 'use strict';
 
-const APP_VERSION = '3.5.6';
+const APP_VERSION = '3.5.7';
 const APP_NAME = 'Tiger';
 const STORAGE_KEY = 'tiger_training_clean_v3_5_2';
 const LEGACY_STORAGE_KEYS = [

@@ -1,30 +1,11 @@
-TIGER v3.5.6 — FAST-START GITHUB PAGES UPDATE
+TIGER v3.5.7 — FULL BRANDING + INSTANT LAUNCH
 
-UPLOAD TO YOUR EXISTING REPOSITORY
-1. Extract this ZIP on your computer.
-2. In the GitHub repository currently hosting Tiger, upload ALL extracted files.
-3. Replace files with the same names when GitHub asks.
-4. Do not upload the ZIP itself or place the extracted files inside another folder.
-5. Confirm the repository root directly shows index.html, app.js, styles.css,
-   sw.js, manifest.webmanifest and version.txt.
-6. Commit the upload to the main branch.
+1. Extract this ZIP.
+2. Upload every item inside this folder to the ROOT of your existing GitHub repository.
+3. Replace the existing files.
+4. Keep GitHub Pages set to: Deploy from a branch / main / (root).
+5. Wait for the Pages deployment to finish.
+6. Check /version.txt displays Tiger v3.5.7.
+7. Fully close and reopen Tiger. It may reload once while replacing v3.5.6.
 
-PAGES SETTING
-Use the same publishing method that is already working:
-  Settings > Pages
-  Source: Deploy from a branch
-  Branch: main
-  Folder: /(root)
-
-VERIFY
-1. Wait for the Pages deployment to complete.
-2. Open:
-     https://YOUR-USERNAME.github.io/YOUR-REPOSITORY-NAME/version.txt
-3. Confirm it says "Tiger v3.5.6".
-4. Fully close the installed Tiger app and reopen it. The first opening after the
-   update may fetch the new files; following launches should be substantially faster.
-5. In Tiger, open Settings and confirm "Tiger v3.5.6" at the bottom.
-
-DATA
-This performance update retains the existing v3.5.2-format storage key. Workout
-history, settings and progression records remain on the same phone/browser origin.
+The original tiger background, header logo and phone icon artwork are included at the repository root.

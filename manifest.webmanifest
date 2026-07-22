@@ -21,25 +21,25 @@
   ],
   "icons": [
     {
-      "src": "./tiger-icon-192-v26.png",
+      "src": "./tiger-icon-192-v27.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "./tiger-icon-512-v26.png",
+      "src": "./tiger-icon-512-v27.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "./tiger-maskable-192-v26.png",
+      "src": "./tiger-maskable-192-v27.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "./tiger-maskable-512-v26.png",
+      "src": "./tiger-maskable-512-v27.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"

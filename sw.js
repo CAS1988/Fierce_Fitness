@@ -1,4 +1,4 @@
-const BUILD = '3.5.6';
+const BUILD = '3.5.7';
 const SCOPE_TOKEN = new URL(self.registration.scope).pathname
   .replace(/^\/+|\/+$/g, '')
   .replace(/[^a-z0-9_-]+/gi, '-') || 'root';
@@ -14,16 +14,17 @@ const CORE_FILES = [
   './favicon.ico',
   './favicon-16x16.png',
   './favicon-32x32.png',
-  './apple-touch-icon.png',
-  './tiger-icon-16-v26.png',
-  './tiger-icon-32-v26.png',
-  './tiger-icon-180-v26.png',
-  './tiger-icon-192-v26.png',
-  './tiger-icon-512-v26.png',
-  './tiger-maskable-192-v26.png',
-  './tiger-maskable-512-v26.png',
-  './assets/tiger-bg.webp',
-  './assets/tiger-logo-mask.png'
+  './apple-touch-icon-v27.png',
+  './tiger-icon-16-v27.png',
+  './tiger-icon-32-v27.png',
+  './tiger-icon-180-v27.png',
+  './tiger-icon-192-v27.png',
+  './tiger-icon-512-v27.png',
+  './tiger-maskable-192-v27.png',
+  './tiger-maskable-512-v27.png',
+  './tiger-bg.png',
+  './tiger-logo.png',
+  './tiger-logo-mask.png'
 ];
 
 function scopedUrl(path) {
@@ -41,10 +42,16 @@ self.addEventListener('install', event => {
 self.addEventListener('activate', event => {
   event.waitUntil((async () => {
     const keys = await caches.keys();
-    await Promise.all(keys
-      .filter(key => key.startsWith('tiger-') && key !== CACHE_NAME)
-      .map(key => caches.delete(key)));
+    const previousTigerCaches = keys.filter(key => key.startsWith('tiger-') && key !== CACHE_NAME);
+    await Promise.all(previousTigerCaches.map(key => caches.delete(key)));
     await self.clients.claim();
+
+    // When replacing an older Tiger build, reload open app windows once so the
+    // restored branding and current code appear without requiring manual cache work.
+    if (previousTigerCaches.length) {
+      const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+      await Promise.all(windows.map(client => client.navigate(client.url).catch(() => undefined)));
+    }
   })());
 });
 
